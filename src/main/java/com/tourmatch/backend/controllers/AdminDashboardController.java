@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Collections; // <-- NUEVO IMPORT: Para enviar JSONs limpios en el balance
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/admin")
 @CrossOrigin(origins = "*") // <-- ¡ESTA ES LA LLAVE MÁGICA!
-
 public class AdminDashboardController {
 
     @Autowired
@@ -213,6 +213,24 @@ public class AdminDashboardController {
             return ResponseEntity.ok().body(Map.of("mensaje", "Reserva cancelada"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    // --- 7. GET: Balance Total de Comisiones (NUEVO) ---
+    @GetMapping("/finanzas/balance")
+    public ResponseEntity<?> obtenerBalancePlataforma() {
+        try {
+            Double totalGanancias = reservaRepository.obtenerTotalComisionesPlataforma();
+            
+            // Si la base de datos está vacía o no hay viajes completados aún, Hibernate devuelve null
+            if (totalGanancias == null) {
+                totalGanancias = 0.0;
+            }
+            
+            // Lo enviamos como un JSON limpio: {"totalComisiones": 15000.0}
+            return ResponseEntity.ok(Collections.singletonMap("totalComisiones", totalGanancias));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("mensaje", "Error al calcular balance: " + e.getMessage()));
         }
     }
 }

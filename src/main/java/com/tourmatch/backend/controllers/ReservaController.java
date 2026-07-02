@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -64,6 +65,23 @@ public class ReservaController {
             return ResponseEntity.ok(reservaActualizada);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // ====================================================================
+    // 🛑 NUEVO ENDPOINT: CANCELAR VIAJE (SOLO TURISTA)
+    // ====================================================================
+    @PutMapping("/{id}/cancelar")
+    public ResponseEntity<?> cancelarViaje(@PathVariable Long id, Principal principal) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.status(401).body(Collections.singletonMap("mensaje", "No autorizado."));
+            }
+            Reserva reservaCancelada = reservaService.cancelarReservaTurista(id, principal.getName());
+            return ResponseEntity.ok(reservaCancelada);
+        } catch (Exception e) {
+            // Retornamos el error como JSON {"mensaje": "..."} para que el fetch de React lo lea correctamente
+            return ResponseEntity.badRequest().body(Collections.singletonMap("mensaje", e.getMessage()));
         }
     }
 

@@ -22,6 +22,10 @@ public class Reserva {
     @Column(name = "precio_total", nullable = false)
     private Double precioTotal;
 
+    // 💰 ESTA ES LA LÍNEA QUE TE FALTABA Y QUE ARREGLA EL ERROR ROJO
+    @Column(name = "comision_plataforma")
+    private Double comisionPlataforma = 0.0;
+
     @Column(nullable = false)
     private Integer cantidadPasajeros;
 

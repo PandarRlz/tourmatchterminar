@@ -119,7 +119,7 @@ public class ReservaService {
         return listaMapeada;
     }
 
-@Transactional
+    @Transactional
     public Reserva aceptarReserva(Long reservaId, String emailConductor) {
         Reserva reserva = reservaRepository.findById(reservaId)
                 .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
@@ -147,6 +147,31 @@ public class ReservaService {
         return reservaRepository.save(reserva);
     }
 
+    // ====================================================================
+    // 🛑 NUEVO MÉTODO: CANCELAR VIAJE (SOLO TURISTA Y SOLO SI ESTÁ PENDIENTE)
+    // ====================================================================
+    @Transactional
+    public Reserva cancelarReservaTurista(Long reservaId, String emailTurista) {
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        // Medida de seguridad extra: Validar que el viaje sea realmente de este turista
+        if (reserva.getTurista() == null || !reserva.getTurista().getEmail().equals(emailTurista)) {
+            throw new RuntimeException("No tienes permiso para cancelar este viaje.");
+        }
+
+        // Regla de Negocio: Solo cancelar si nadie lo ha aceptado aún
+        if (reserva.getEstado() != Reserva.EstadoReserva.PENDIENTE) {
+            throw new RuntimeException("No puedes cancelar este viaje porque ya fue aceptado o completado.");
+        }
+
+        reserva.setEstado(Reserva.EstadoReserva.CANCELADA);
+        return reservaRepository.save(reserva);
+    }
+
+    // ====================================================================
+    // 💰 ACTUALIZADO: FINALIZAR VIAJE + CÁLCULO DE COMISIÓN (15%)
+    // ====================================================================
     @Transactional
     public Reserva finalizarReserva(Long reservaId, String emailConductor) {
         Reserva reserva = reservaRepository.findById(reservaId)
@@ -161,7 +186,14 @@ public class ReservaService {
             throw new RuntimeException("Solo se puede finalizar un viaje que ya está aceptado.");
         }
 
+        // Cambiamos el estado a COMPLETADA
         reserva.setEstado(Reserva.EstadoReserva.COMPLETADA);
+
+        // 💰 REGLA DE FINANZAS: Calculamos y guardamos el 15% en la base de datos
+        Double precioBase = (reserva.getPrecioTotal() != null) ? reserva.getPrecioTotal() : 0.0;
+        Double comisionAdmin = precioBase * 0.15;
+        reserva.setComisionPlataforma(comisionAdmin);
+
         return reservaRepository.save(reserva);   
     }
 

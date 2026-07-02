@@ -51,17 +51,27 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Permite conexiones desde cualquier origen (Vercel, Localhost, etc.)
-        configuration.setAllowedOrigins(List.of("*")); 
+        // Permite conexiones desde el dominio específico de producción y localhost para desarrollo
+        configuration.setAllowedOrigins(Arrays.asList(
+            "https://tourmatch-frontend.vercel.app",  // Producción
+            "http://localhost:3000",                    // Desarrollo local React
+            "http://localhost:5173"                     // Desarrollo Vite
+        ));
         
         // Habilita explícitamente todos los métodos necesarios para la app
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         
         // Permite cualquier tipo de cabecera (incluyendo tu Token de autorización)
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "x-requested-with", "Cache-Control"));
         
         // Expone las cabeceras si el cliente las requiere
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        
+        // Permite que se envíen credenciales (cookies, tokens) en las solicitudes
+        configuration.setAllowCredentials(true);
+        
+        // Tiempo de caché para la respuesta del preflight (en segundos)
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         // Aplica esta política de manera global a todos los endpoints de la API
